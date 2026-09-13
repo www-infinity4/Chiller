@@ -24,13 +24,16 @@
   <meta name="twitter:description" content="1980s suspense anthology television with rare classic Hitchcock feature nights.">
   <meta name="twitter:image" content="https://i.ytimg.com/vi/YD5xBeGeX5w/hqdefault.jpg">
   <link rel="stylesheet" href="styles.css?v=20260913a">
+  <style>
+    .chiller-channel-menu{position:relative}.chiller-channel-menu summary{list-style:none;cursor:pointer;border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:9px 12px;background:#0c141d;font-weight:800}.chiller-channel-menu summary::-webkit-details-marker{display:none}.chiller-channel-menu nav{position:absolute;top:calc(100% + 8px);left:0;z-index:300;width:min(320px,88vw);max-height:72vh;overflow:auto;display:grid;gap:5px;padding:10px;background:#05090e;border:1px solid rgba(255,255,255,.14);border-radius:15px;box-shadow:0 20px 55px #000}.chiller-channel-menu nav a{color:white;text-decoration:none;padding:10px 11px;border-radius:10px;background:rgba(255,255,255,.055);font-weight:750}.chiller-channel-menu nav a[href*="/Chiller/"]{outline:2px solid #b7e7ff;background:rgba(92,200,255,.12)}.infinity-auto-menu{display:none!important}.enter-button{background:linear-gradient(180deg,rgba(0,0,0,.2),rgba(0,0,0,.88)),url('https://i.ytimg.com/vi/YD5xBeGeX5w/hqdefault.jpg') center/cover!important}@media(max-width:700px){.chiller-channel-menu summary span{display:none}}
+  </style>
   <script>if(!location.search&&history.replaceState)history.replaceState(null,"",location.pathname+"?card=20260913d"+location.hash);</script>
   <script src="https://www-infinity4.github.io/Control-Phi/control-phi.js?v=20260913-news2" onerror="this.onerror=null;this.src='https://www-infinity4.github.io/News-Phi/control-phi.js?v=20260913-news2'"></script>
 </head>
 <body>
   <header class="masthead">
     <a class="brand" href="#top" aria-label="Chiller home"><span class="brand-mark">C</span><span>CHILLER</span></a>
-    <details class="channel-menu"><summary aria-label="Open channel remote">☰ <span>Channels</span></summary><nav id="channelNav" aria-label="Switch channels"></nav></details>
+    <details class="chiller-channel-menu" data-channel-menu><summary aria-label="Open channel remote">☰ <span>Channels</span></summary><nav id="channelNav" aria-label="Switch channels"></nav></details>
     <div class="live-pill"><i></i> ON AIR</div>
     <time id="stationClock">--:-- -- local</time>
   </header>
@@ -51,7 +54,6 @@
         <button id="rewindButton" type="button">Rewind 30 sec</button>
         <button id="liveButton" class="live-button" type="button"><i></i> Join live</button>
         <button id="shareButton" class="share-button" type="button">Share · +1/10 ⭐</button>
-        <button id="walletButton" class="wallet-button" type="button">Wallet ⭐ <span id="walletAmount">0.0</span></button>
         <span id="shareStatus" role="status" aria-live="polite"></span>
       </div>
       <div class="progress-wrap"><div class="progress-meta"><span id="positionLabel">Station clock</span><span id="remainingLabel">-- remaining</span></div><div class="progress-track"><div id="progressBar"></div></div></div>
@@ -59,7 +61,7 @@
 
     <section class="next-up"><div class="section-heading"><p>1980s ANTHOLOGY ROTATION</p><h2>Next on Chiller</h2></div><div id="nextCards" class="next-grid"></div></section>
 
-    <section class="classics"><div class="section-heading"><p>THE CHILLER IDENTITY</p><h2>Hitchcock + Twilight Zone first</h2></div><div class="classic-grid"><a href="https://www.peacocktv.com/watch-online/tv/alfred-hitchcock-presents/6231083507338548112" target="_blank" rel="noopener"><b>Alfred Hitchcock Presents</b><span>1985 revival and classic suspense access</span></a><a href="https://www.paramountplus.com/shows/the-twilight-zone-classic/" target="_blank" rel="noopener"><b>The Twilight Zone</b><span>Anthology suspense and supernatural stories</span></a><a href="https://www.youtube.com/watch?v=k8gq-GjMEPo" target="_blank" rel="noopener"><b>Rare Hitchcock feature</b><span>Blackmail (1929) · licensed Artflix presentation · feature-night candidate</span></a><a href="https://www-infinity4.github.io/News-Phi/" target="_blank" rel="noopener"><b>News Phi</b><span>Completed channel shares become related research/story cards</span></a></div></section>
+    <section class="classics"><div class="section-heading"><p>THE CHILLER IDENTITY</p><h2>Hitchcock + Twilight Zone first</h2></div><div class="classic-grid"><a href="https://www.peacocktv.com/watch-online/tv/alfred-hitchcock-presents/6231083507338548112" target="_blank" rel="noopener"><b>Alfred Hitchcock Presents</b><span>1985 revival and classic suspense access</span></a><a href="https://www.paramountplus.com/shows/the-twilight-zone-classic/" target="_blank" rel="noopener"><b>The Twilight Zone</b><span>Anthology suspense and supernatural stories</span></a><a href="https://www.youtube.com/watch?v=k8gq-GjMEPo" target="_blank" rel="noopener"><b>Saturday 10 PM Hitchcock feature</b><span>Blackmail (1929) · licensed Artflix presentation · rare black-and-white feature</span></a><a href="https://www-infinity4.github.io/News-Phi/" target="_blank" rel="noopener"><b>News Phi</b><span>Completed channel shares become related research/story cards</span></a></div></section>
 
     <section class="guide"><div class="section-heading guide-heading"><div><p>7-DAY GUIDE · NEW LINEUP AT 12:00 AM VIEWER LOCAL TIME</p><h2>Chiller TV guide</h2></div><span id="guideDate"></span></div><div id="guideRows" class="guide-rows"></div></section>
 
@@ -68,7 +70,7 @@
 
   <footer><b>CHILLER</b><span>1980s Hitchcock and Twilight Zone suspense first. Older black-and-white material stays rare. No R-rated schedule.</span></footer>
   <script src="data/catalog.js?v=20260913d"></script>
-  <script src="app.js?v=20260913c"></script>
+  <script src="app.js?v=20260913d"></script>
   <script src="https://www.youtube.com/iframe_api"></script>
   <script src="https://www-infinity4.github.io/TNT/channels.js?v=20260913-priority"></script>
 </body>
