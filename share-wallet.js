@@ -1,6 +1,83 @@
 (function(){
   "use strict";
 
+  // Chiller natural-end policy: catalog runtimes are hints, never stop commands.
+  // The half-hour slot remains playable until the real video ends. Only then does
+  // the leftover part of the slot become intermission.
+  const SLOT_SECONDS=30*60;
+  const catalog=Array.isArray(window.CHILLER_CATALOG)?window.CHILLER_CATALOG:[];
+  catalog.forEach(item=>{
+    if(!item||item.family==="hitchcock-feature")return;
+    if(!Number.isFinite(Number(item.runtimeHintSeconds)))item.runtimeHintSeconds=Number(item.runtimeSeconds)||0;
+    item.runtimeSeconds=SLOT_SECONDS;
+    item.playToNaturalEnd=true;
+  });
+
+  let naturalBreakTimer=0;
+  const pad=n=>String(Math.max(0,Math.floor(n))).padStart(2,"0");
+  const fmtDur=seconds=>{const value=Math.max(0,Math.floor(Number(seconds)||0));return `${Math.floor(value/60)}:${pad(value%60)}`;};
+  const slotTiming=()=>{const now=new Date();const elapsed=(now.getMinutes()%30)*60+now.getSeconds();return{elapsed,remaining:Math.max(0,SLOT_SECONDS-elapsed)};};
+  const clearNaturalBreak=()=>{if(naturalBreakTimer){clearInterval(naturalBreakTimer);naturalBreakTimer=0;}};
+
+  function renderNaturalBreak(){
+    const timing=slotTiming();
+    // Do not cover the next program with a stale ENDED event at the exact handoff.
+    if(timing.elapsed<5||timing.remaining<2){clearNaturalBreak();return;}
+    const card=document.getElementById("stationCard");
+    const title=document.getElementById("stationCardTitle");
+    const countdown=document.getElementById("stationCardCountdown");
+    const position=document.getElementById("positionLabel");
+    const remaining=document.getElementById("remainingLabel");
+    const bar=document.getElementById("progressBar");
+    if(card)card.hidden=false;
+    if(title)title.textContent="Episode complete · next Chiller story stays on schedule";
+    if(countdown)countdown.textContent=`Begins in ${fmtDur(timing.remaining)}`;
+    if(position)position.textContent="Episode finished naturally · brief intermission";
+    if(remaining)remaining.textContent=`${fmtDur(timing.remaining)} until next program`;
+    if(bar)bar.style.width=`${Math.min(100,(timing.elapsed/SLOT_SECONDS)*100)}%`;
+  }
+
+  function beginNaturalBreak(){
+    clearNaturalBreak();
+    renderNaturalBreak();
+    naturalBreakTimer=setInterval(()=>{
+      const timing=slotTiming();
+      if(timing.elapsed<3||timing.remaining<=1){clearNaturalBreak();return;}
+      renderNaturalBreak();
+    },1000);
+  }
+
+  function wrapPlayer(){
+    if(!window.YT||typeof YT.Player!=="function"||YT.Player.__chillerNaturalEndWrapped)return;
+    const NativePlayer=YT.Player;
+    function WrappedPlayer(target,options){
+      const config=options||{};
+      const events={...(config.events||{})};
+      const priorState=events.onStateChange;
+      events.onStateChange=function(event){
+        if(typeof priorState==="function"){
+          try{priorState.call(this,event);}catch(_){ }
+        }
+        if(window.YT&&YT.PlayerState&&event&&event.data===YT.PlayerState.ENDED)beginNaturalBreak();
+      };
+      config.events=events;
+      return new NativePlayer(target,config);
+    }
+    try{Object.setPrototypeOf(WrappedPlayer,NativePlayer);}catch(_){ }
+    WrappedPlayer.prototype=NativePlayer.prototype;
+    WrappedPlayer.__chillerNaturalEndWrapped=true;
+    YT.Player=WrappedPlayer;
+  }
+
+  const previousReady=window.onYouTubeIframeAPIReady;
+  window.onYouTubeIframeAPIReady=function(){
+    wrapPlayer();
+    if(typeof previousReady==="function")return previousReady.apply(this,arguments);
+  };
+  if(window.YT&&typeof YT.Player==="function")wrapPlayer();
+  ["liveButton","startOverButton","rewindButton"].forEach(id=>document.getElementById(id)?.addEventListener("click",clearNaturalBreak,{capture:true}));
+  window.CHILLER_NATURAL_END_POLICY={version:"2026-09-16.1",slotSeconds:SLOT_SECONDS,rule:"play-until-real-media-end-then-intermission-until-slot-boundary"};
+
   const button=document.getElementById("shareButton");
   const status=document.getElementById("shareStatus");
   if(!button||button.dataset.starCoinWired==="1")return;
