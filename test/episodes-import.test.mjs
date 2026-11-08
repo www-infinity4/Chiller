@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {SERIES,normalizeEpisodeRows,buildEpisodeCatalog,reuseUnchangedEpisodeCatalog} from '../data/episodes-import.mjs';
+import {SERIES,normalizeEpisodeRows,buildEpisodeCatalog,reuseUnchangedEpisodeCatalog,verifyStoredEpisodeCatalog} from '../data/episodes-import.mjs';
 
 function episodeRows(show,index=0){
  return Array.from({length:show.expectedStories},(_,n)=>({
@@ -67,4 +67,21 @@ test('refreshing the same 190 episodes never produces a new timestamp-only bot c
  assert.equal(reuseUnchangedEpisodeCatalog(edited,first),edited,'real edits must create a new catalog');
  assert.equal(reuseUnchangedEpisodeCatalog(refreshed,{...first,playbackRightsVerified:true}),refreshed,
   'cannot retain an unsafe previous catalog simply to avoid a bot commit');
+});
+
+test('an upstream outage can reuse only an independently validated 190-story, metadata-only snapshot',()=>{
+ const sources=SERIES.map(x=>({show:{id:x.showId,name:x.title,premiered:'1985-09-29'},rows:episodeRows(x)}));
+ const snapshot=buildEpisodeCatalog(sources,'2026-11-07T18:00:00.000Z');
+ assert.equal(verifyStoredEpisodeCatalog(snapshot),true);
+ const clone=()=>JSON.parse(JSON.stringify(snapshot));
+ const forbidden=clone();forbidden.shows[0].stories[0].videoId='fake-stream';
+ assert.throws(()=>verifyStoredEpisodeCatalog(forbidden),/cached_catalog/i);
+ const wrong=clone();wrong.shows[0].stories[0].sourceUrl=wrong.shows[0].stories[1].sourceUrl;
+ assert.throws(()=>verifyStoredEpisodeCatalog(wrong),/cached_catalog|source/i);
+ const incomplete=clone();incomplete.shows[1].stories.pop();
+ assert.throws(()=>verifyStoredEpisodeCatalog(incomplete),/cached_catalog|incomplete/i);
+ const promoted=clone();promoted.playbackRightsVerified=true;
+ assert.throws(()=>verifyStoredEpisodeCatalog(promoted),/cached_catalog/i);
+ const wrongEra=clone();wrongEra.shows[0].stories[0].aired='1955-10-02';
+ assert.throws(()=>verifyStoredEpisodeCatalog(wrongEra),/cached_catalog|era/i);
 });
