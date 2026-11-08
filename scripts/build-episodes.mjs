@@ -1,5 +1,5 @@
-import {writeFile} from 'node:fs/promises';
-import {SERIES,buildEpisodeCatalog} from '../data/episodes-import.mjs';
+import {readFile,writeFile} from 'node:fs/promises';
+import {SERIES,buildEpisodeCatalog,reuseUnchangedEpisodeCatalog} from '../data/episodes-import.mjs';
 
 const origin='https://api.tvmaze.com';
 const headers={'Accept':'application/json','User-Agent':'QuantaPhi-Chiller-EpisodeCatalog/1.0 (https://github.com/www-infinity4/Chiller)'};
@@ -23,9 +23,12 @@ for(const series of SERIES){
  const rows=await readJson('/shows/'+series.showId+'/episodes');
  sources.push({show,rows});
 }
-const catalog=buildEpisodeCatalog(sources);
+const output=new URL('../episodes.json',import.meta.url);
+let previous=null;
+try{previous=JSON.parse(await readFile(output,'utf8'));}catch{/* Bootstrap or recover a malformed prior catalog safely. */}
+const catalog=reuseUnchangedEpisodeCatalog(buildEpisodeCatalog(sources),previous);
 if(catalog.totalStories!==190||catalog.shows.some(x=>x.scheduleEnabled!==false))
  throw Error('catalog_completeness_or_player_policy_failed');
-await writeFile(new URL('../episodes.json',import.meta.url),JSON.stringify(catalog,null,2)+'\n','utf8');
+await writeFile(output,JSON.stringify(catalog,null,2)+'\n','utf8');
 for(const s of catalog.shows)console.log(s.title+': '+s.storyCount+' TVmaze story segments · metadata only');
 console.log('Chiller episodes.json: '+catalog.totalStories+' attributed stories · playback not enabled');
