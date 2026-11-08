@@ -44,3 +44,11 @@ test('incomplete series, off-era titles, forged source URLs and duplicate story 
  partial[0].show.name='Alfred Hitchcock Presents (1955)';
  assert.throws(()=>buildEpisodeCatalog(partial,'2026-11-07T12:00:00.000Z'),/series_identity/i);
 });
+
+test('each TVmaze link must resolve to its own original story ID with no tracking or redirect suffix',()=>{
+ const show=SERIES[0],rows=episodeRows(show);
+ assert.throws(()=>normalizeEpisodeRows(show,rows.map((r,i)=>i===0?{...r,url:rows[1].url}:r)),/source/i,
+  'a valid TVmaze link for a different episode must never pass provenance validation');
+ assert.throws(()=>normalizeEpisodeRows(show,rows.map((r,i)=>i===0?{...r,url:r.url+'?url=https://example.invalid'}:r)),/source/i,
+  'a source URL with arbitrary query parameters must not become a canonical trusted link');
+});
