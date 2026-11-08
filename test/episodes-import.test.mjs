@@ -39,7 +39,7 @@ test('incomplete series, off-era titles, forged source URLs and duplicate story 
  assert.throws(()=>normalizeEpisodeRows(show,rows.slice(1)),/incomplete/i);
  assert.throws(()=>normalizeEpisodeRows(show,rows.map((x,i)=>i===0?{...x,airdate:'1959-10-02'}:x)),/era/i);
  assert.throws(()=>normalizeEpisodeRows(show,rows.map((x,i)=>i===0?{...x,url:'https://tvmaze.com.attacker.example/episodes/1'}:x)),/source/i);
- assert.throws(()=>normalizeEpisodeRows(show,rows.map((x,i)=>i===1?{...x,id:rows[0].id}:x)),/duplicate/i);
+ assert.throws(()=>normalizeEpisodeRows(show,rows.map((x,i)=>i===1?{...x,id:rows[0].id,url:rows[0].url}:x)),/duplicate/i);
  const partial=SERIES.map(x=>({show:{id:x.showId,name:x.title,premiered:'1985-09-29'},rows:episodeRows(x)}));
  partial[0].show.name='Alfred Hitchcock Presents (1955)';
  assert.throws(()=>buildEpisodeCatalog(partial,'2026-11-07T12:00:00.000Z'),/series_identity/i);
