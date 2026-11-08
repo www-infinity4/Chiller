@@ -10,11 +10,18 @@ export const SERIES=Object.freeze([
 ]);
 const fail=code=>{throw Error(code)};
 const integer=value=>Number.isSafeInteger(value)&&value>0;
-const validSource=(value,scope)=>{
+const validSource=(value,scope,episodeId=null)=>{
  try{
   const u=new URL(value);
   if(u.protocol!=='https:'||u.username||u.password||u.port)return false;
-  if(scope==='episode')return u.hostname==='www.tvmaze.com'&&/^\/episodes\/\d+\/[\w%-]+\/?$/.test(u.pathname);
+  if(scope==='episode'){
+   const matched=u.pathname.match(/^\/episodes\/([1-9]\d*)\/[\w%-]+\/?$/);
+   // Exact TVmaze episode provenance: a different legitimate episode page
+   // cannot be attached to this story, and query/hash redirects are not
+   // canonical record URLs.
+   return u.hostname==='www.tvmaze.com'&&!u.search&&!u.hash&&
+    matched!==null&&Number(matched[1])===episodeId;
+  }
   if(scope==='image')return u.hostname==='static.tvmaze.com'&&u.pathname.startsWith('/uploads/images/');
   return false;
  }catch{return false}
@@ -26,7 +33,7 @@ export function normalizeEpisodeRows(series,rows){
  const normalized=rows.map(item=>{
   if(!integer(item?.id)||!integer(item?.season)||item.season>series.seasonCount||
    !integer(item?.number)||typeof item.name!=='string'||!item.name.trim()||
-   item.name.length>180||!validSource(item.url,'episode'))fail('invalid_episode_source_or_metadata');
+   item.name.length>180||!validSource(item.url,'episode',item.id))fail('invalid_episode_source_or_metadata');
   if(typeof item.airdate!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(item.airdate)||
    Number(item.airdate.slice(0,4))<series.firstYear||
    Number(item.airdate.slice(0,4))>series.lastYear||
