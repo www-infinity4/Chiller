@@ -137,3 +137,22 @@ test('the Chiller channel mounts a separate source-attributed episode guide with
  assert.match(js,/TVmaze/);
  assert.doesNotMatch(player,/episodes\.json|episodeGuideResults|sourceUrl/);
 });
+
+test('the Chiller episode guide is accessible and readable at 360px without changing on-air scheduling',async()=>{
+ const {readFileSync}=await import('node:fs');
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../styles.css',import.meta.url),'utf8');
+ const script=readFileSync(new URL('../episodes-guide.js',import.meta.url),'utf8');
+ assert.match(html,/aria-labelledby="episodeGuideTitle"/);
+ assert.match(html,/for="episodeSeries"/);
+ assert.match(html,/for="episodeSearch"/);
+ assert.match(html,/id="episodeGuideStatus"[^>]*role="status"/);
+ assert.match(html,/Episode records, not licensed videos|episode records, not licensed videos/i);
+ assert.match(css,/@media\(max-width:600px\)/);
+ assert.match(css,/\.episode-research-controls,\.episode-research-grid\{grid-template-columns:minmax\(0,1fr\)\}/);
+ assert.match(css,/\.episode-research-controls select,\.episode-research-controls input\{font-size:18px\}/);
+ assert.match(script,/selectEpisodePage\(catalog/);
+ assert.match(script,/\.replaceChildren\(\)/);
+ assert.match(script,/\.textContent=/);
+ assert.doesNotMatch(script,/innerHTML|loadVideoById|YT\.Player|window\.CHILLER_CATALOG/);
+});
