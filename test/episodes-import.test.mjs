@@ -85,3 +85,55 @@ test('an upstream outage can reuse only an independently validated 190-story, me
  const wrongEra=clone();wrongEra.shows[0].stories[0].aired='1955-10-02';
  assert.throws(()=>verifyStoredEpisodeCatalog(wrongEra),/cached_catalog|era/i);
 });
+
+test('stored Chiller catalog safely powers a 20-at-a-time guide, not an autoplay list',async()=>{
+ const {readFileSync}=await import('node:fs');
+ const {selectEpisodePage,validateGuideCatalog}=await import('../data/episodes-guide.mjs');
+ const catalog=JSON.parse(readFileSync(new URL('../episodes.json',import.meta.url),'utf8'));
+ assert.equal(validateGuideCatalog(catalog),true);
+ const all=selectEpisodePage(catalog,{series:'all',search:'',offset:0});
+ assert.equal(all.total,190);assert.equal(all.items.length,20);assert.equal(all.nextOffset,20);
+ assert.ok(all.items.every(x=>x.playbackStatus==='metadata_only'&&!Object.hasOwn(x,'videoId')));
+ assert.ok(all.items.every(x=>x.sourceUrl.startsWith('https://www.tvmaze.com/episodes/')));
+ const last=selectEpisodePage(catalog,{series:'all',search:'',offset:180});
+ assert.equal(last.items.length,10);assert.equal(last.nextOffset,null);
+ const hitch=selectEpisodePage(catalog,{series:'alfred-hitchcock-presents-1985'});
+ assert.equal(hitch.total,80);assert.ok(hitch.items.every(x=>x.seriesId==='alfred-hitchcock-presents-1985'));
+ const twilight=selectEpisodePage(catalog,{series:'twilight-zone-1985'});
+ assert.equal(twilight.total,110);assert.ok(twilight.items.every(x=>x.seriesId==='twilight-zone-1985'));
+ const lookup=selectEpisodePage(catalog,{search:'Shatterday'});
+ assert.equal(lookup.total,1);assert.equal(lookup.items[0].title,'Shatterday');
+ assert.equal(selectEpisodePage(catalog,{search:'thereisnoepisodebythisname'}).total,0);
+ assert.equal(selectEpisodePage(catalog,{offset:-100}).items.length,20);
+ assert.equal(selectEpisodePage(catalog,{offset:999999}).items.length,0);
+ assert.throws(()=>selectEpisodePage(catalog,{series:'unknown-series'}),/series/i);
+});
+
+test('Chiller guide rejects a catalog if any episode claims unlicensed playback',async()=>{
+ const {readFileSync}=await import('node:fs');
+ const {validateGuideCatalog}=await import('../data/episodes-guide.mjs');
+ const base=JSON.parse(readFileSync(new URL('../episodes.json',import.meta.url),'utf8'));
+ const injected=structuredClone(base);
+ injected.shows[0].stories[0].videoId='unsafe-video';
+ assert.throws(()=>validateGuideCatalog(injected),/invalid|catalog/i);
+ const link=structuredClone(base);
+ link.shows[0].stories[0].sourceUrl='https://www.tvmaze.com/episodes/999999/imposter';
+ assert.throws(()=>validateGuideCatalog(link),/invalid|catalog/i);
+});
+
+test('the Chiller channel mounts a separate source-attributed episode guide without loading the catalog into the player',async()=>{
+ const {readFileSync}=await import('node:fs');
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ const js=readFileSync(new URL('../episodes-guide.js',import.meta.url),'utf8');
+ const player=readFileSync(new URL('../app.js',import.meta.url),'utf8');
+ assert.match(html,/id="episodeGuide"/);
+ assert.match(html,/id="episodeSeries"/);
+ assert.match(html,/id="episodeSearch"/);
+ assert.match(html,/id="episodeGuideResults"/);
+ assert.match(html,/episodes-guide\.js\?v=/);
+ assert.match(html,/Episode research guide/);
+ assert.match(js,/episodes\.json/);
+ assert.match(js,/textContent/);
+ assert.match(js,/TVmaze/);
+ assert.doesNotMatch(player,/episodes\.json|episodeGuideResults|sourceUrl/);
+});
