@@ -7,38 +7,56 @@ on:
       - "scripts/build-episodes.mjs"
       - "test/episodes-import.test.mjs"
       - ".github/workflows/episodes-import.yml"
+  pull_request:
+    paths:
+      - "data/episodes-import.mjs"
+      - "scripts/build-episodes.mjs"
+      - "test/episodes-import.test.mjs"
+      - "episodes.json"
+      - ".github/workflows/episodes-import.yml"
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
-  import-catalog:
+  validate:
     runs-on: ubuntu-latest
     timeout-minutes: 8
+    permissions:
+      contents: read
     steps:
-      - name: Checkout isolated requested branch
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: true
-      - name: Use Node without npm packages
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Validate source contracts before importing
+      - name: Run local Chiller metadata contract tests
         run: node --test test/episodes-import.test.mjs
-      - name: Import two exact 1985-revival TVmaze series
+      - name: Build verified catalog in CI sandbox (not yet public)
         run: node scripts/build-episodes.mjs
-      - name: Check metadata never becomes unauthorised playback
+      - name: Prove completeness and block unlicensed playback
         run: |
-          node --input-type=module -e 'import {readFileSync} from "node:fs"; const d=JSON.parse(readFileSync("episodes.json","utf8"));if(d.totalStories!==190||d.playbackRightsVerified!==false||d.shows.some(s=>s.scheduleEnabled||s.stories.some(e=>e.playbackStatus!=="metadata_only"||"videoId" in e)))process.exit(1);'
-      - name: Save verified catalog to this branch only
+          node --input-type=module -e 'import {readFileSync} from "node:fs";const d=JSON.parse(readFileSync("episodes.json","utf8"));if(d.totalStories!==190||d.playbackRightsVerified!==false||d.shows.some(s=>s.scheduleEnabled||s.stories.some(e=>e.playbackStatus!=="metadata_only"||"videoId" in e)))process.exit(1);'
+  commit-catalog:
+    needs: validate
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Reproduce vetted metadata import
+        run: node scripts/build-episodes.mjs
+      - name: Save resulting episodes.json to requested branch only
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add episodes.json
           if git diff --cached --quiet; then
-            echo "Metadata already current; no new commit."
+            echo "Episode catalog already current."
           else
             git commit -m "data: import complete attributed 1985 anthology episode guides"
             git push origin "HEAD:add-full-episodes"
