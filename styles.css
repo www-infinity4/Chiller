@@ -4,7 +4,7 @@
 .episodes-research-intro{margin:0 0 18px;color:#d5e5ef;line-height:1.55;font-size:clamp(16px,3.5vw,18px);max-width:78ch}
 .episode-research-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px}
 .episode-research-controls label{display:flex;flex-direction:column;gap:8px;color:var(--ice);font-weight:800;font-size:15px}
-.episode-research-controls select,.episode-research-controls input{box-sizing:border-box;width:100%;min-width:0;min-height:50px;background:#101923;border:1px solid rgba(183,231,255,.42);border-radius:12px;padding:10px 12px;color:#fff;font:500 17px/1.4 inherit;color-scheme:dark}
+.episode-research-controls select,.episode-research-controls input{box-sizing:border-box;width:100%;min-width:0;min-height:50px;background:#101923;border:1px solid rgba(183,231,255,.42);border-radius:12px;padding:10px 12px;color:#fff;font:inherit;font-size:17px;line-height:1.4;color-scheme:dark}
 .episode-research-controls input::placeholder{color:#a9b8c6}
 .episode-research-controls :is(input,select):focus-visible,.episode-research-more:focus-visible,.episode-research-source:focus-visible{outline:3px solid var(--ice);outline-offset:3px}
 .episode-research-status{font-size:16px;line-height:1.5;color:#dceaf4;min-height:24px;margin:10px 0 16px}
@@ -16,7 +16,7 @@
 .episode-research-meta{font-size:14px;line-height:1.4;color:#b9cddd}
 .episode-research-policy{font-size:14px;color:#d4dfeb;line-height:1.4}
 .episode-research-source{color:#b7e7ff;font-size:15px;font-weight:750;line-height:1.4;margin-top:auto;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
-.episode-research-more{margin:20px 0 8px;min-height:50px;border:1px solid rgba(183,231,255,.6);border-radius:999px;background:#172734;color:white;padding:11px 24px;font:800 16px/1.35 inherit;cursor:pointer}
+.episode-research-more{margin:20px 0 8px;min-height:50px;border:1px solid rgba(183,231,255,.6);border-radius:999px;background:#172734;color:white;padding:11px 24px;font:inherit;font-size:16px;line-height:1.35;font-weight:800;cursor:pointer}
 .episode-research-more[hidden]{display:none}
 .episode-research-attribution{font-size:13px;line-height:1.6;color:#bfd0de;margin:12px 0}
 .episode-research-attribution a{color:var(--ice)}
