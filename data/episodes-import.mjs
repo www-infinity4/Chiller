@@ -77,3 +77,17 @@ export function buildEpisodeCatalog(sources,generatedAt=new Date().toISOString()
   usage:'Research catalog only; do not add entries to Chiller autoplay without a separately authorized full-length source',
   totalStories:shows.reduce((count,show)=>count+show.stories.length,0),shows};
 }
+
+// Retain the exact prior JSON when upstream episode metadata has not changed.
+// A fresh collection timestamp alone is NOT a new source revision; producing
+// a bot-authored no-op commit on every push makes human-reviewed PRs harder to
+// verify and can trigger GitHub's bot-workflow approval gate.
+export function reuseUnchangedEpisodeCatalog(candidate,previous){
+ if(!candidate||candidate.playbackRightsVerified!==false||
+    !previous||previous.playbackRightsVerified!==false||
+    typeof previous.generatedAt!=='string'||
+    !Number.isFinite(Date.parse(previous.generatedAt)))return candidate;
+ const {generatedAt:latestAt,...latest}=candidate;
+ const {generatedAt:priorAt,...old}=previous;
+ return JSON.stringify(latest)===JSON.stringify(old)?previous:candidate;
+}
