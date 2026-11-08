@@ -91,3 +91,30 @@ export function reuseUnchangedEpisodeCatalog(candidate,previous){
  const {generatedAt:priorAt,...old}=previous;
  return JSON.stringify(latest)===JSON.stringify(old)?previous:candidate;
 }
+
+// Offline source-outage fallback may use an already committed snapshot only
+// after reconstructing it through the SAME strict 1985-series validator.
+// No video IDs, invented streaming rights, mixed eras or changed provenance
+// survive the canonical byte-for-byte structure check.
+export function verifyStoredEpisodeCatalog(stored){
+ if(!stored||!Array.isArray(stored.shows)||stored.shows.length!==SERIES.length||
+    stored.playbackRightsVerified!==false||stored.totalStories!==190||
+    typeof stored.generatedAt!=='string')fail('cached_catalog_invalid');
+ try{
+  const sources=SERIES.map(series=>{
+   const show=stored.shows.find(x=>x?.tvmazeShowId===series.showId);
+   if(!show||!Array.isArray(show.stories))fail('cached_catalog_invalid');
+   return {
+    show:{id:series.showId,name:series.title,premiered:'1985-09-29'},
+    rows:show.stories.map(item=>({
+     id:item.tvmazeId,season:item.season,number:item.storyNumber,
+     name:item.title,airdate:item.aired,url:item.sourceUrl,
+     runtime:item.runtimeMinutes,image:{medium:item.imageUrl}
+    }))
+   };
+  });
+  const generated=buildEpisodeCatalog(sources,stored.generatedAt);
+  if(JSON.stringify(generated)!==JSON.stringify(stored))fail('cached_catalog_invalid');
+  return true;
+ }catch{fail('cached_catalog_invalid')}
+}
