@@ -6,12 +6,20 @@ on:
       - "data/episodes-import.mjs"
       - "scripts/build-episodes.mjs"
       - "test/episodes-import.test.mjs"
+      - "data/episodes-guide.mjs"
+      - "episodes-guide.js"
+      - "index.html"
+      - "styles.css"
       - ".github/workflows/episodes-import.yml"
   pull_request:
     paths:
       - "data/episodes-import.mjs"
       - "scripts/build-episodes.mjs"
       - "test/episodes-import.test.mjs"
+      - "data/episodes-guide.mjs"
+      - "episodes-guide.js"
+      - "index.html"
+      - "styles.css"
       - "episodes.json"
       - ".github/workflows/episodes-import.yml"
   workflow_dispatch:
