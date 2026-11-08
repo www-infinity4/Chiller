@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {SERIES,normalizeEpisodeRows,buildEpisodeCatalog} from '../data/episodes-import.mjs';
+import {SERIES,normalizeEpisodeRows,buildEpisodeCatalog,reuseUnchangedEpisodeCatalog} from '../data/episodes-import.mjs';
 
 function episodeRows(show,index=0){
  return Array.from({length:show.expectedStories},(_,n)=>({
@@ -51,4 +51,20 @@ test('each TVmaze link must resolve to its own original story ID with no trackin
   'a valid TVmaze link for a different episode must never pass provenance validation');
  assert.throws(()=>normalizeEpisodeRows(show,rows.map((r,i)=>i===0?{...r,url:r.url+'?url=https://example.invalid'}:r)),/source/i,
   'a source URL with arbitrary query parameters must not become a canonical trusted link');
+});
+
+test('refreshing the same 190 episodes never produces a new timestamp-only bot commit',()=>{
+ const sources=SERIES.map(x=>({show:{id:x.showId,name:x.title,premiered:'1985-09-29'},rows:episodeRows(x)}));
+ const first=buildEpisodeCatalog(sources,'2026-11-07T18:00:00.000Z');
+ const refreshed=buildEpisodeCatalog(sources,'2026-11-08T05:00:00.000Z');
+ assert.equal(reuseUnchangedEpisodeCatalog(refreshed,first),first,
+  'source-identical data must preserve the previous catalog and timestamp byte-for-byte');
+ assert.equal(reuseUnchangedEpisodeCatalog(refreshed,null),refreshed);
+ const edited=buildEpisodeCatalog(SERIES.map((x,i)=>({
+  show:{id:x.showId,name:x.title,premiered:'1985-09-29'},
+  rows:episodeRows(x).map((v,j)=>i===0&&j===0?{...v,name:'Revised story metadata'}:v)
+ })),'2026-11-08T05:00:00.000Z');
+ assert.equal(reuseUnchangedEpisodeCatalog(edited,first),edited,'real edits must create a new catalog');
+ assert.equal(reuseUnchangedEpisodeCatalog(refreshed,{...first,playbackRightsVerified:true}),refreshed,
+  'cannot retain an unsafe previous catalog simply to avoid a bot commit');
 });
