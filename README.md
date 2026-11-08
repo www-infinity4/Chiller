@@ -31,3 +31,11 @@ Chiller is **not** a generic public-domain horror channel. Its normal schedule i
 - `data/catalog.js` — corrected 1980s core catalog plus rare feature candidates
 - `app.js` — deterministic alternating schedule, continuous feature blocks, player synchronization and seven-day guide
 - `.github/workflows/pages.yml` — GitHub Pages deployment
+
+## 1985–1989 episode research guide (feature branch)
+
+The channel homepage now has a **source-attributed episode research guide** for the two 1985–1989 anthology revivals. It reads the checked-in `episodes.json`, validates the exact 190-entry TVmaze catalog, and lets visitors filter either series, search by title, and reveal 20 stories at a time. Entries are readable at 360px and link to their individual original TVmaze pages. No source images are fabricated.
+
+**The guide is not a player.** All 190 listings are research metadata only (`playbackRightsVerified=false`, no `videoId`). They do not enter the on-air `data/catalog.js`, scheduled `app.js` program pool, Star Coin payouts, or any authorized playback path. The existing live channel and weekly guide remain unchanged. Metadata attribution is to TVmaze under CC BY-SA 4.0, distinct from video copyright and streaming rights.
+
+To test the importer, source provenance, UI contract and no-playback safeguards on this branch, run `node --test test/episodes-import.test.mjs`. The GitHub Actions `Chiller 1985 anthology episode catalog` workflow runs the same checks and verifies that an unchanged upstream catalog does not cause a new bot commit. Temporary TVmaze network failures can reuse *only* a strictly revalidated cached snapshot while reporting that the source refresh was deferred. No npm or paid API is needed for the website.

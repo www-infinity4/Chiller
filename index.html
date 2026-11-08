@@ -65,12 +65,37 @@
 
     <section class="guide"><div class="section-heading guide-heading"><div><p>7-DAY GUIDE · NEW LINEUP AT 12:00 AM VIEWER LOCAL TIME</p><h2>Chiller TV guide</h2></div><span id="guideDate"></span></div><div id="guideRows" class="guide-rows"></div></section>
 
+    <section class="episodes-research" id="episodeGuide" aria-labelledby="episodeGuideTitle">
+      <div class="section-heading">
+        <p>HITCHCOCK + TWILIGHT ZONE · 1985–1989</p>
+        <h2 id="episodeGuideTitle">Episode research guide</h2>
+      </div>
+      <p class="episodes-research-intro">Explore 190 real story listings from the 1980s revivals. These are <strong>episode records, not licensed videos</strong>; the Chiller on-air player remains separate.</p>
+      <div class="episode-research-controls">
+        <label for="episodeSeries">Series
+          <select id="episodeSeries">
+            <option value="all">Both series</option>
+            <option value="alfred-hitchcock-presents-1985">Alfred Hitchcock (1985)</option>
+            <option value="twilight-zone-1985">Twilight Zone (1985)</option>
+          </select>
+        </label>
+        <label for="episodeSearch">Find a story
+          <input id="episodeSearch" type="search" placeholder="Search titles…" autocomplete="off" maxlength="100">
+        </label>
+      </div>
+      <p class="episode-research-status" id="episodeGuideStatus" role="status" aria-live="polite">Loading original episode records…</p>
+      <div id="episodeGuideResults" class="episode-research-grid" aria-label="Real 1980s episode records"></div>
+      <button id="episodeGuideMore" class="episode-research-more" type="button" hidden>Show 20 more stories</button>
+      <p class="episode-research-attribution">Episode metadata: <a href="https://www.tvmaze.com/api" target="_blank" rel="noopener noreferrer">TVmaze</a> · CC BY-SA 4.0. Individual story links open the original TVmaze record. No streaming rights are implied.</p>
+    </section>
+
     <section class="channel-directory"><div class="section-heading"><p>REMOTE</p><h2>Other channels</h2></div><nav id="directoryNav" aria-label="All active channels"></nav></section>
   </main>
 
   <footer><b>CHILLER</b><span>1980s Hitchcock and Twilight Zone suspense first. Older black-and-white material stays rare. No R-rated schedule.</span></footer>
   <script src="data/catalog.js?v=20260913d"></script>
   <script src="app.js?v=20260913d"></script>
+  <script type="module" src="episodes-guide.js?v=20261107-1985-research1"></script>
   <script src="share-wallet.js?v=20260916-naturalend1"></script>
   <script src="https://www.youtube.com/iframe_api"></script>
   <script src="https://www-infinity4.github.io/TNT/channels.js?v=20260916-share1"></script>

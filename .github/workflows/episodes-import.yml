@@ -1,0 +1,81 @@
+name: Chiller 1985 anthology episode catalog
+on:
+  push:
+    branches: ["add-full-episodes"]
+    paths:
+      - "data/episodes-import.mjs"
+      - "scripts/build-episodes.mjs"
+      - "test/episodes-import.test.mjs"
+      - "test/episodes-guide.browser.spec.mjs"
+      - "data/episodes-guide.mjs"
+      - "episodes-guide.js"
+      - "index.html"
+      - "styles.css"
+      - ".github/workflows/episodes-import.yml"
+  pull_request:
+    paths:
+      - "data/episodes-import.mjs"
+      - "scripts/build-episodes.mjs"
+      - "test/episodes-import.test.mjs"
+      - "test/episodes-guide.browser.spec.mjs"
+      - "data/episodes-guide.mjs"
+      - "episodes-guide.js"
+      - "index.html"
+      - "styles.css"
+      - "episodes.json"
+      - ".github/workflows/episodes-import.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run local Chiller metadata contract tests
+        run: node --test test/episodes-import.test.mjs
+      - name: Build verified catalog in CI sandbox (not yet public)
+        run: node scripts/build-episodes.mjs
+      - name: Prove completeness and block unlicensed playback
+        run: |
+          node --input-type=module -e 'import {readFileSync} from "node:fs";const d=JSON.parse(readFileSync("episodes.json","utf8"));if(d.totalStories!==190||d.playbackRightsVerified!==false||d.shows.some(s=>s.scheduleEnabled||s.stories.some(e=>e.playbackStatus!=="metadata_only"||"videoId" in e)))process.exit(1);'
+      - name: Install temporary browser-test dependencies (site remains keyless)
+        run: |
+          npm install --no-save --no-package-lock @playwright/test@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Verify 360px real Chiller episode guide and reject unlicensed videos
+        run: |
+          python3 -m http.server 8788 --bind 127.0.0.1 >/tmp/chiller-episode-http.log 2>&1 &
+          npx playwright test test/episodes-guide.browser.spec.mjs --reporter=line --workers=1
+  commit-catalog:
+    needs: validate
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Reproduce vetted metadata import
+        run: node scripts/build-episodes.mjs
+      - name: Save resulting episodes.json to requested branch only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add episodes.json
+          if git diff --cached --quiet; then
+            echo "Episode catalog already current."
+          else
+            git commit -m "data: import complete attributed 1985 anthology episode guides"
+            git push origin "HEAD:add-full-episodes"
+          fi
